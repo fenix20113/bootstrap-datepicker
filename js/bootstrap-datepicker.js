@@ -228,7 +228,7 @@
 			// Retrieve view index from any aliases
 			o.startView = this._resolveViewName(o.startView, 0);
 			o.minViewMode = this._resolveViewName(o.minViewMode, 0);
-			o.maxViewMode = this._resolveViewName(o.maxViewMode, 4);
+			o.maxViewMode = this._resolveViewName(o.maxViewMode, 6);
 
 			// Check that the start view is between min and max
 			o.startView = Math.min(o.startView, o.maxViewMode);
@@ -862,6 +862,7 @@
 			}
 			html += '</tr>';
 			this.picker.find('.datepicker-days thead').append(html);
+			this.picker.find('.datepicker-weeks thead').append(html);
 		},
 
 		fillMonths: function(){
@@ -986,6 +987,41 @@
 			view.find('td').html(html);
 		},
 
+		_fillRange: function () {
+			var html = [];
+
+			html.push('<tr class="last=7">');
+			html.push('<td colspan="7">');
+			html.push('<div>Last 7 days</div>');
+			html.push('</td>');
+			html.push('</tr>');
+
+			html.push('<tr class="last-30">');
+			html.push('<td colspan="7">');
+			html.push('<div>Last 30 days</div>');
+			html.push('</td>');
+			html.push('</tr>');
+
+			html.push('<tr class="last-week">');
+			html.push('<td colspan="7">');
+			html.push('<div>Last week</div>');
+			html.push('</td>');
+			html.push('</tr>');
+
+			html.push('<tr>');
+			html.push('<td colspan="7">');
+			html.push('<div>Last 7 days</div>');
+			html.push('</td>');
+			html.push('</tr>');
+
+
+
+			html.push('</tr>');
+
+			this.picker.find('.datepicker-range tbody').empty().append(html.join(''));
+
+		},
+
 		fill: function(){
 			var d = new Date(this.viewDate),
 				year = d.getUTCFullYear(),
@@ -1002,6 +1038,8 @@
 			if (isNaN(year) || isNaN(month))
 				return;
 			this.picker.find('.datepicker-days .datepicker-switch')
+						.text(DPGlobal.formatDate(d, titleFormat, this.o.language));
+			this.picker.find('.datepicker-weeks .datepicker-switch')
 						.text(DPGlobal.formatDate(d, titleFormat, this.o.language));
 			this.picker.find('tfoot .today')
 						.text(todaytxt)
@@ -1074,6 +1112,9 @@
 			}
 			this.picker.find('.datepicker-days tbody').empty().append(html.join(''));
 
+			this.picker.find('.datepicker-weeks tbody').empty().append(html.join(''));
+
+
 			var monthsTitle = dates[this.o.language].monthsTitle || dates['en'].monthsTitle || 'Months';
 			var months = this.picker.find('.datepicker-months')
 						.find('.datepicker-switch')
@@ -1107,6 +1148,8 @@
 					}
 				});
 			}
+
+			this._fillRange();
 
 			// Generating decade/years picker
 			this._fill_yearsView(
@@ -1193,6 +1236,21 @@
 
 			var target, dir, day, year, month;
 			target = $(e.target);
+
+			if (target.hasClass('view-days')) {
+				this.showMode(0);
+			}
+
+
+			if (target.hasClass('view-weeks')) {
+				this.showMode(5)
+			}
+
+
+			if (target.hasClass('view-range')) {
+				this.showMode(6)
+			}
+
 
 			// Clicked on the switch
 			if (target.hasClass('datepicker-switch')){
@@ -1559,13 +1617,23 @@
 
 		showMode: function(dir){
 			if (dir){
-				this.viewMode = Math.max(this.o.minViewMode, Math.min(this.o.maxViewMode, this.viewMode + dir));
+				this.viewMode = dir;
+			} else {
+				this.viewMode = 0;
 			}
+
 			this.picker
 				.children('div')
 				.hide()
 				.filter('.datepicker-' + DPGlobal.modes[this.viewMode].clsName)
 					.show();
+
+			this.picker.find('.btn.active').removeClass('active');
+
+			this.picker.find('.btn')
+				.filter('.view-' + DPGlobal.modes[this.viewMode].clsName)
+				.addClass('active');
+
 			this.updateNavArrows();
 		}
 	};
@@ -1751,7 +1819,7 @@
 		keyboardNavigation: true,
 		language: 'en',
 		minViewMode: 0,
-		maxViewMode: 4,
+		maxViewMode: 6,
 		multidate: false,
 		multidateSeparator: ',',
 		orientation: "auto",
@@ -1816,7 +1884,18 @@
 				clsName: 'centuries',
 				navFnc: 'FullCentury',
 				navStep: 1000
-		}],
+			},
+			{
+				clsName: 'weeks',
+				navFnc: 'Month',
+				navStep: 1
+			},
+			{
+				clsName: 'range',
+				navFnc: 'Range',
+				navStep: 1
+			}
+		],
 		isLeapYear: function(year){
 			return (((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0));
 		},
@@ -2012,6 +2091,13 @@
 			              '<tr>'+
 			                '<th colspan="7" class="datepicker-title"></th>'+
 			              '</tr>'+
+							'<tr>' +
+							'<td colspan="7"><div class="btn-group btn-group-xs btn-group-lg btn-group-sm" role="group">' +
+							'<div class="btn btn-default view-range">Range</div>' +
+							'<div class="btn btn-default view-days">Days</div>' +
+							'<div class="btn btn-default view-weeks">Weeks</div></div>' +
+							'</td>' +
+							'</tr>'+
 							'<tr>'+
 								'<th class="prev"><span class="glyphicon glyphicon-arrow-left"></span></th>'+
 								'<th colspan="5" class="datepicker-switch"></th>'+
@@ -2064,6 +2150,22 @@
 									DPGlobal.footTemplate+
 								'</table>'+
 							'</div>'+
+
+							'<div class="datepicker-weeks">' +
+								'<table class="table-condensed">' +
+									DPGlobal.headTemplate +
+									DPGlobal.contTemplate +
+									DPGlobal.footTemplate +
+								'</table>' +
+							'</div>' +
+							'<div class="datepicker-range">' +
+								'<table class="table-condensed">' +
+									DPGlobal.headTemplate +
+									DPGlobal.contTemplate +
+									DPGlobal.footTemplate +
+							'</table>' +
+							'</div>' +
+
 						'</div>';
 
 	$.fn.datepicker.DPGlobal = DPGlobal;

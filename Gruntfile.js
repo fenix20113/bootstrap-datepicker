@@ -69,7 +69,7 @@ module.exports = function(grunt){
         },
         watch: {
             less: {
-                files: ['build/**/*.less'],
+                files: ['build/**/*.less', 'less/**/*.less'],
                 tasks: ['dist-css'],
                 options: {
                     spawn: false
