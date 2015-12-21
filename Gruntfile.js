@@ -67,6 +67,23 @@ module.exports = function(grunt){
                 dest: 'dist/js/<%= pkg.name %>.js'
             }
         },
+        watch: {
+            less: {
+                files: ['build/**/*.less'],
+                tasks: ['dist-css'],
+                options: {
+                    spawn: false
+                }
+            },
+            js: {
+                files: ['js/**/*.js'],
+                tasks: ['dist-js'],
+                options: {
+                    spawn: false
+                }
+            }
+        },
+
         uglify: {
             options: {
                 preserveComments: 'some'
